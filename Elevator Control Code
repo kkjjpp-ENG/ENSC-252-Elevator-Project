@@ -1,0 +1,160 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity elevator_controller is
+    Generic(
+        NUM_FLOORS : integer := 4;
+        TRAVEL_TIME : integer := 2; 
+        DOOR_TIME : integer := 3
+    );
+    Port (
+        clk : in  STD_LOGIC;
+        rst_hard : in  STD_LOGIC;
+        rst_soft : in  STD_LOGIC;
+        estop : in  STD_LOGIC;
+        tick_1hz : in  STD_LOGIC;
+        req_buttons : in  STD_LOGIC_VECTOR(NUM_FLOORS-1 downto 0);
+        
+        -- Outputs
+        current_floor : out integer range 0 to NUM_FLOORS-1;
+        door_open : out STD_LOGIC; -- This name caused the conflict
+        moving_up : out STD_LOGIC;
+        moving_down : out STD_LOGIC;
+        state_debug : out STD_LOGIC_VECTOR(2 downto 0)
+    );
+end elevator_controller;
+
+architecture Behavioral of elevator_controller is
+
+    -- RENAMED "DOOR_OPEN" to "S_DOOR_OPEN" to fix the conflict
+    type state_type is (IDLE, MOVE_UP, MOVE_DOWN, CHECK_STOP, S_DOOR_OPEN, ESTOP_STATE);
+    signal state : state_type;
+    
+    signal curr_floor_reg : integer range 0 to NUM_FLOORS-1;
+    signal requests : std_logic_vector(NUM_FLOORS-1 downto 0);
+    signal timer : integer range 0 to 10;
+    signal last_dir_up : std_logic := '1'; 
+
+begin
+
+    process(clk, rst_hard)
+        variable req_above : boolean;
+        variable req_below : boolean;
+    begin
+        if rst_hard = '1' then
+            state <= IDLE;
+            curr_floor_reg <= 0;
+            requests <= (others => '0');
+            timer <= 0;
+            last_dir_up <= '1';
+            
+        elsif rising_edge(clk) then
+            
+            -- 1. Latch Requests
+            for i in 0 to NUM_FLOORS-1 loop
+                if req_buttons(i) = '1' then
+                    requests(i) <= '1';
+                end if;
+            end loop;
+
+            req_above := false;
+            req_below := false;
+            for i in 0 to NUM_FLOORS-1 loop
+                if i > curr_floor_reg and requests(i) = '1' then req_above := true; end if;
+                if i < curr_floor_reg and requests(i) = '1' then req_below := true; end if;
+            end loop;
+
+            -- 2. FSM
+            if rst_soft = '1' then
+                requests <= (others => '0');
+            elsif estop = '1' then
+                state <= ESTOP_STATE;
+            else
+                case state is
+                    
+                    when IDLE =>
+                        timer <= 0;
+                        if requests(curr_floor_reg) = '1' then
+                            state <= S_DOOR_OPEN; -- Updated Name
+                        elsif last_dir_up = '1' and req_above then
+                            state <= MOVE_UP;
+                        elsif last_dir_up = '0' and req_below then
+                            state <= MOVE_DOWN;
+                        elsif req_above then
+                            state <= MOVE_UP;
+                            last_dir_up <= '1';
+                        elsif req_below then
+                            state <= MOVE_DOWN;
+                            last_dir_up <= '0';
+                        end if;
+
+                    when MOVE_UP =>
+                        if tick_1hz = '1' then
+                            if timer < TRAVEL_TIME - 1 then
+                                timer <= timer + 1;
+                            else
+                                timer <= 0;
+                                if curr_floor_reg < NUM_FLOORS - 1 then
+                                    curr_floor_reg <= curr_floor_reg + 1;
+                                end if;
+                                state <= CHECK_STOP; 
+                                last_dir_up <= '1';
+                            end if;
+                        end if;
+
+                    when MOVE_DOWN =>
+                        if tick_1hz = '1' then
+                            if timer < TRAVEL_TIME - 1 then
+                                timer <= timer + 1;
+                            else
+                                timer <= 0;
+                                if curr_floor_reg > 0 then
+                                    curr_floor_reg <= curr_floor_reg - 1;
+                                end if;
+                                state <= CHECK_STOP;
+                                last_dir_up <= '0';
+                            end if;
+                        end if;
+
+                    when CHECK_STOP =>
+                        if requests(curr_floor_reg) = '1' then
+                            state <= S_DOOR_OPEN; -- Updated Name
+                        elsif last_dir_up = '1' and req_above then
+                            state <= MOVE_UP;
+                        elsif last_dir_up = '0' and req_below then
+                            state <= MOVE_DOWN;
+                        else
+                            state <= IDLE;
+                        end if;
+
+                    when S_DOOR_OPEN => -- Updated Name
+                        requests(curr_floor_reg) <= '0'; 
+                        if tick_1hz = '1' then
+                            if timer < DOOR_TIME - 1 then
+                                timer <= timer + 1;
+                            else
+                                timer <= 0;
+                                state <= IDLE;
+                            end if;
+                        end if;
+
+                    when ESTOP_STATE =>
+                        if estop = '0' then state <= IDLE; end if;
+                        
+                end case;
+            end if;
+        end if;
+    end process;
+
+    -- Outputs
+    current_floor <= curr_floor_reg;
+    door_open     <= '1' when state = S_DOOR_OPEN else '0'; -- Updated Name check
+    moving_up     <= '1' when state = MOVE_UP else '0';
+    moving_down   <= '1' when state = MOVE_DOWN else '0';
+    
+    with state select state_debug <=
+        "000" when IDLE, "001" when MOVE_UP, "010" when MOVE_DOWN, 
+        "011" when S_DOOR_OPEN, "100" when ESTOP_STATE, "101" when CHECK_STOP, "111" when others;
+
+end Behavioral;
