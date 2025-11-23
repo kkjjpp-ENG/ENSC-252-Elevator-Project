@@ -1,17 +1,17 @@
 -- Clock Divider code --
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
 
-entity clock_divider is
-    Generic ( MAX_COUNT : integer := 50000000 ); -- 50MHz to 1Hz
-    Port (
-        clk       : in  STD_LOGIC;
-        reset     : in  STD_LOGIC;
-        tick_1hz  : out STD_LOGIC
+ENTITY ClockDivider IS
+    GENERIC ( MaxCount : INTEGER := 50000000 ); -- This basically changes the frequency from 50MHz to 1Hz
+    PORT(
+        clk : in  STD_LOGIC;
+        reset : in  STD_LOGIC;
+        freq  : out STD_LOGIC
     );
-end clock_divider;
+END ClockDivider;
 
 architecture Behavioral of clock_divider is
     signal count : integer range 0 to MAX_COUNT;
