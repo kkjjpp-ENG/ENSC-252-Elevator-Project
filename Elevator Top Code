@@ -1,0 +1,84 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity elevator_top is
+    Port (
+        CLOCK_50 : in  STD_LOGIC;
+        KEY      : in  STD_LOGIC_VECTOR(3 downto 0); -- KEY0=Rst, KEY1=SoftRst
+        SW       : in  STD_LOGIC_VECTOR(9 downto 0); -- SW0-3=Reqs, SW9=ESTOP
+        HEX0     : out STD_LOGIC_VECTOR(6 downto 0);
+        LEDR     : out STD_LOGIC_VECTOR(9 downto 0)
+    );
+end elevator_top;
+
+architecture Struct of elevator_top is
+
+    signal tick_wire : std_logic;
+    signal current_floor_wire : integer range 0 to 4;
+    signal door_wire, up_wire, down_wire : std_logic;
+    signal rst_hard_wire, rst_soft_wire : std_logic;
+    -- Unused signal for debug state (can be mapped to other LEDs if desired)
+    signal state_dbg : std_logic_vector(2 downto 0);
+
+begin
+    -- Logic inversion for Keys (Keys are active low on DE10)
+    -- KEY(0) is Reset, KEY(1) is Soft Reset
+    rst_hard_wire <= not KEY(0);
+    rst_soft_wire <= not KEY(1);
+
+    -- Instantiate Clock Divider
+    U1_CLK: entity work.clock_divider
+        generic map (MAX_COUNT => 50000000)
+        port map (
+            clk => CLOCK_50,
+            reset => rst_hard_wire,
+            tick_1hz => tick_wire
+        );
+
+    -- Instantiate Controller
+    U2_CTRL: entity work.elevator_controller
+        port map (
+            clk => CLOCK_50,
+            rst_hard => rst_hard_wire,
+            rst_soft => rst_soft_wire,
+            estop => SW(9),
+            tick_1hz => tick_wire,
+            req_buttons => SW(3 downto 0), -- Switches 0-3 act as floor requests
+            current_floor => current_floor_wire,
+            door_open => door_wire,
+            moving_up => up_wire,
+            moving_down => down_wire,
+            state_debug => state_dbg
+        );
+
+    -- Instantiate Display
+    U3_DISP: entity work.seven_segment
+        port map (
+            floor_in => current_floor_wire,
+            hex_out => HEX0
+        );
+
+    -- ============================================================
+    -- LED ASSIGNMENTS (FIXED)
+    -- ============================================================
+    
+    -- System Status
+    LEDR(0) <= door_wire; -- ON when Door is OPEN
+    LEDR(1) <= up_wire;   -- ON when Moving UP
+    LEDR(2) <= down_wire; -- ON when Moving DOWN
+    
+    -- Switch Input Debug (LEDR 3-6)
+    -- This connects the switch directly to the LED so you can see it "register"
+    LEDR(3) <= SW(0);     -- Floor 0 Request
+    LEDR(4) <= SW(1);     -- Floor 1 Request
+    LEDR(5) <= SW(2);     -- Floor 2 Request
+    LEDR(6) <= SW(3);     -- Floor 3 Request
+    
+    -- Unused LEDs (Optional: Map debug state or force to 0)
+    LEDR(7) <= '0';
+    LEDR(8) <= '0';
+    
+    -- ESTOP Status
+    LEDR(9) <= SW(9);     -- ON when ESTOP switch is UP
+
+end Struct;
