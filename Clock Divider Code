@@ -9,25 +9,25 @@ ENTITY ClockDivider IS
     PORT(
         clk : in  STD_LOGIC;
         reset : in  STD_LOGIC;
-        freq  : out STD_LOGIC
+        freq : out STD_LOGIC
     );
 END ClockDivider;
 
-architecture Behavioral of clock_divider is
-    signal count : integer range 0 to MAX_COUNT;
-begin
+ARCHITECTURE Behavioral of ClockDivider IS
+    SIGNAL count : INTEGER RANGE 0 to MaxCount;
+BEGIN
     process(clk, reset)
-    begin
+    BEGIN
         if reset = '1' then
             count <= 0;
-            tick_1hz <= '0';
+            freq <= '0';
         elsif rising_edge(clk) then
-            if count = MAX_COUNT - 1 then
+            if count = MaxCount then
                 count <= 0;
-                tick_1hz <= '1'; -- Generate 1-cycle pulse
+                freq <= '1';
             else
                 count <= count + 1;
-                tick_1hz <= '0';
+                freq <= '0';
             end if;
         end if;
     end process;
