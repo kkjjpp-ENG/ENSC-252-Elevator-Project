@@ -5,7 +5,7 @@ USE IEEE.NUMERIC_STD.ALL;
 ENTITY tbElevator IS
 END tbElevator;
 
-ARCHITECTURE Sim of tbElevator IS
+ARCHITECTURE Behavioral of tbElevator IS
 
     signal clk : std_logic := '0';
     signal HardReset : std_logic := '0';
@@ -139,4 +139,4 @@ BEGIN
         wait;
     END process;
 
-END Sim;
+END Behavioral;
