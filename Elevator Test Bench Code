@@ -1,10 +1,11 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
 
-entity tbElevator is
-end tbElevator;
+ENTITY tbElevator IS
+END tbElevator;
 
-architecture Sim of tbElevator is
+ARCHITECTURE Sim of tbElevator IS
 
     signal clk : std_logic := '0';
     signal HardReset : std_logic := '0';
@@ -19,9 +20,9 @@ architecture Sim of tbElevator is
 
     constant CLKPERIOD : time := 20 ns;
 
-begin
+BEGIN
 
-    UUT: entity work.ElevatorController
+    UUT: ENTITY work.ElevatorController
         generic map(
             NumFloors => 4,
             TravelTime => 2,
@@ -43,23 +44,23 @@ begin
 
     -- Clock Generation
     clk_process: process
-    begin
+    BEGIN
         clk <= '0'; wait for CLK_PERIOD/2;
         clk <= '1'; wait for CLK_PERIOD/2;
-    end process;
+    END process;
 
     -- 1Hz Tick Simulation (Fast mode for TB)
     tick_process: process
-    begin
+    BEGIN
         wait for CLK_PERIOD * 10; -- Wait 10 cycles
         tick <= '1';
         wait for CLK_PERIOD;
         tick <= '0';
-    end process;
+    END process;
 
     -- Stimulus Process
     stim_proc: process
-    begin
+    BEGIN
         -- 1. Reset System (GR-5b)
         HardReset <= '1';
         wait for 100 ns;
@@ -136,6 +137,6 @@ begin
         
         report "All tests completed.";
         wait;
-    end process;
+    END process;
 
-end Sim;
+END Sim;
