@@ -1,15 +1,17 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+-- Elevator Controller Code --
 
-entity elevator_controller is
-    Generic(
-        NUM_FLOORS : integer := 4;
-        TRAVEL_TIME : integer := 2; 
-        DOOR_TIME : integer := 3
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+
+ENTITY ElevatorController IS
+    GENERIC(
+        NumFloors : integer := 4;
+        TravelTime : integer := 2; 
+        DoorTime : integer := 3
     );
-    Port (
-        clk : in  STD_LOGIC;
+    PORT(
+        clk : IN  STD_LOGIC;
         rst_hard : in  STD_LOGIC;
         rst_soft : in  STD_LOGIC;
         estop : in  STD_LOGIC;
