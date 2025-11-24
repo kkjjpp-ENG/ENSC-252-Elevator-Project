@@ -1,44 +1,44 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity tb_elevator is
-end tb_elevator;
+entity tbElevator is
+end tbElevator;
 
-architecture Sim of tb_elevator is
+architecture Sim of tbElevator is
 
     signal clk : std_logic := '0';
-    signal rst_hard : std_logic := '0';
-    signal rst_soft : std_logic := '0';
+    signal HardReset : std_logic := '0';
+    signal SoftReset : std_logic := '0';
     signal estop : std_logic := '0';
-    signal tick_1hz : std_logic := '0';
-    signal req_buttons : std_logic_vector(3 downto 0) := (others => '0');
+    signal tick : std_logic := '0';
+    signal ReqButtons : std_logic_vector(3 downto 0) := (others => '0');
     
-    signal current_floor : integer;
-    signal door_open, moving_up, moving_down : std_logic;
-    signal state_debug : std_logic_vector(2 downto 0);
+    signal CurrentFloor : integer;
+    signal DoorOpen, MovingUp, MovingDown : std_logic;
+    signal debugger : std_logic_vector(2 downto 0);
 
-    constant CLK_PERIOD : time := 20 ns;
+    constant CLKPERIOD : time := 20 ns;
 
 begin
 
-    UUT: entity work.elevator_controller
-        generic map (
-            NUM_FLOORS => 4,
-            TRAVEL_TIME => 2, -- Reduced for Sim
-            DOOR_TIME => 2    -- Reduced for Sim
+    UUT: entity work.ElevatorController
+        generic map(
+            NumFloors => 4,
+            TravelTime => 2,
+            DoorTime => 2 
         )
         port map (
             clk => clk,
-            rst_hard => rst_hard,
-            rst_soft => rst_soft,
+            HardReset => HardReset,
+            SoftReset => SoftReset,
             estop => estop,
-            tick_1hz => tick_1hz,
-            req_buttons => req_buttons,
-            current_floor => current_floor,
-            door_open => door_open,
-            moving_up => moving_up,
-            moving_down => moving_down,
-            state_debug => state_debug
+            tick => tick,
+            ReqButtons => ReqButtons,
+            CurrentFloor => CurrentFloor,
+            DoorOpen => DoorOpen,
+            MovingUp => MovingUp,
+            MovingDown => MovingDown,
+            debugger => debugger
         );
 
     -- Clock Generation
@@ -52,24 +52,24 @@ begin
     tick_process: process
     begin
         wait for CLK_PERIOD * 10; -- Wait 10 cycles
-        tick_1hz <= '1';
+        tick <= '1';
         wait for CLK_PERIOD;
-        tick_1hz <= '0';
+        tick <= '0';
     end process;
 
     -- Stimulus Process
     stim_proc: process
     begin
         -- 1. Reset System (GR-5b)
-        rst_hard <= '1';
+        HardReset <= '1';
         wait for 100 ns;
-        rst_hard <= '0';
+        HardReset <= '0';
         wait for 100 ns;
         
         report "Test 1: Basic Request Floor 2";
-        req_buttons(2) <= '1';
+        ReqButtons(2) <= '1';
         wait for CLK_PERIOD * 2;
-        req_buttons(2) <= '0'; -- Release button
+        ReqButtons(2) <= '0'; -- Release button
         
         -- Wait for arrival (Move UP -> Arrive -> Door Open)
         wait until door_open = '1';
@@ -77,7 +77,7 @@ begin
         report "Success: Arrived at Floor 2";
 
         -- Wait for door to close
-        wait until door_open = '0'; 
+        wait until DoorOpen = '0'; 
         wait for 200 ns;
 
         report "Test 2: Directional Priority (VR-3a)";
@@ -85,51 +85,51 @@ begin
         -- Wait... Logic dictates IDLE picks nearest? 
         -- Actually, let's test moving logic.
         -- Request 0. Start moving down. Then Request 1.
-        req_buttons(0) <= '1';
+        ReqButtons(0) <= '1';
         wait for CLK_PERIOD * 20; -- Wait until start moving down
-        req_buttons(0) <= '0';
+        ReqButtons(0) <= '0';
         
         -- Inject Request for Floor 1 mid-motion
-        req_buttons(1) <= '1'; 
+        ReqButtons(1) <= '1'; 
         wait for CLK_PERIOD * 2;
-        req_buttons(1) <= '0';
+        ReqButtons(1) <= '0';
         
         -- Should stop at 1 first (VR-3a request below current while moving down)
         wait until door_open = '1';
-        assert current_floor = 1 report "Failed: Skipped Floor 1" severity error;
+        assert CurrentFloor = 1 report "Failed: Skipped Floor 1" severity error;
         report "Success: Stopped at intermediate Floor 1";
         
         wait until door_open = '0';
         
         -- Should continue to 0
-        wait until door_open = '1';
-        assert current_floor = 0 report "Failed: Did not continue to Floor 0" severity error;
+        wait until DoorOpen = '1';
+        assert CurrentFloor = 0 report "Failed: Did not continue to Floor 0" severity error;
 
         report "Test 3: Soft Reset (GR-5a, VR-3d)";
         -- Request Floor 3
-        req_buttons(3) <= '1';
+        ReqButtons(3) <= '1';
         wait for CLK_PERIOD * 5;
-        req_buttons(3) <= '0';
+        ReqButtons(3) <= '0';
         
         -- Assert Soft Reset immediately
-        rst_soft <= '1';
+        SoftReset <= '1';
         wait for CLK_PERIOD * 5;
-        rst_soft <= '0';
+        SoftReset <= '0';
         
         -- System should NOT move to 3 because request was cleared.
         wait for 1000 ns;
-        assert current_floor = 0 report "Failed: Moved despite Soft Reset" severity error;
+        assert CurrentFloor = 0 report "Failed: Moved despite Soft Reset" severity error;
         
         report "Test 4: ESTOP (VR-3d)";
         -- Request Floor 3 again
-        req_buttons(3) <= '1';
+        ReqButtons(3) <= '1';
         wait for CLK_PERIOD * 2;
-        req_buttons(3) <= '0';
+        ReqButtons(3) <= '0';
         
         wait until moving_up = '1';
         estop <= '1';
         wait for CLK_PERIOD * 5;
-        assert moving_up = '0' report "Failed: Did not halt on ESTOP" severity error;
+        assert MovingUp = '0' report "Failed: Did not halt on ESTOP" severity error;
         
         estop <= '0';
         -- Logic allows recovery from IDLE state usually
