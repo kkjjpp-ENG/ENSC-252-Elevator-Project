@@ -5,10 +5,10 @@ USE IEEE.NUMERIC_STD.ALL;
 ENTITY elevator_top IS
     PORT(
         CLOCK_50 : in  STD_LOGIC;
-        KEY      : in  STD_LOGIC_VECTOR(3 downto 0); -- KEY0=Rst, KEY1=SoftRst
-        SW       : in  STD_LOGIC_VECTOR(9 downto 0); -- SW0-3=Reqs, SW9=ESTOP
-        HEX0     : out STD_LOGIC_VECTOR(6 downto 0);
-        LEDR     : out STD_LOGIC_VECTOR(9 downto 0)
+        KEY : in  STD_LOGIC_VECTOR(3 downto 0);
+        SW : in  STD_LOGIC_VECTOR(9 downto 0); 
+        HEX0 : out STD_LOGIC_VECTOR(6 downto 0);
+        LEDR : out STD_LOGIC_VECTOR(9 downto 0)
     );
 END elevator_top;
 
@@ -75,4 +75,4 @@ BEGIN
     -- ESTOP Status
     LEDR(9) <= SW(9); 
 
-end Behavioral;
+END Behavioral;
