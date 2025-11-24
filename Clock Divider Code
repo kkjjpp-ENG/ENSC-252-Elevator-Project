@@ -22,17 +22,13 @@ BEGIN
             count <= 0;
             freq <= '0';
         elsif rising_edge(clk) then
-            if count = MaxCount then
+            if count = MaxCount - 1 then
                 count <= 0;
                 freq <= '1';
             else
                 count <= count + 1;
                 freq <= '0';
             end if;
-        end if;
-        if clk = '01' then
-            reset <= 1;
-            count <= freq;
         end if;
     end process;
 end Behavioral;
