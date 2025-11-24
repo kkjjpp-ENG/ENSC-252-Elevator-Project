@@ -97,11 +97,11 @@ BEGIN
                                 timer <= 0;
                                 if CurrentFloor < NumFloors - 1 then
                                     CurrentFloor <= CurrentFloor + 1;
-                                end if;
+                                END if;
                                 state <= CHECK_STOP; 
                                 LastDirUp <= '1';
-                            end if;
-                        end if;
+                            END if;
+                        END if;
 
                     when MOVE_DOWN => if tick = '1' then
                             if timer < TRAVEL_TIME - 1 then
@@ -113,8 +113,8 @@ BEGIN
                                 end if;
                                 state <= CHECK_STOP;
                                 LastDirUp <= '0';
-                            end if;
-                        end if;
+                            END if;
+                        END if;
 
                     when CHECK_STOP => if requests(CurrentFloor) = '1' then
                             state <= S_DOOR_OPEN;
@@ -124,7 +124,7 @@ BEGIN
                             state <= MOVE_DOWN;
                         else
                             state <= IDLE;
-                        end if;
+                        END if;
 
                     when S_DOOR_OPEN => requests(CurrentFloor) <= '0'; 
                         if tick = '1' then
@@ -133,19 +133,19 @@ BEGIN
                             else
                                 timer <= 0;
                                 state <= IDLE;
-                            end if;
-                        end if;
+                            END if;
+                        END if;
 
                     when ESTOP_STATE =>
                         if estop = '0' then state <= IDLE; end if;
                         
-                end case;
-            end if;
-        end if;
-    end process;
+                END case;
+            END if;
+        END if;
+    END process;
 
 
-    current_floor <= CurrentFloor;
+    CurrentFloor <= CurrentFloor;
     DoorOpen     <= '1' when state = S_DOOR_OPEN else '0';
     MovingUp     <= '1' when state = MOVE_UP else '0';
     MovingDown   <= '1' when state = MOVE_DOWN else '0';
