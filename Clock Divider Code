@@ -28,7 +28,7 @@ BEGIN
             else
                 count <= count + 1;
                 freq <= '0';
-            end if;
-        end if;
-    end process;
-end Behavioral;
+            END if;
+        END if;
+    END process;
+END Behavioral;
