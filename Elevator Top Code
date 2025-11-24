@@ -33,7 +33,7 @@ BEGIN
         );
 
     -- Instantiate Controller
-    U2_CTRL: entity work.elevator_controller
+    U2_CTRL: entity work.ElevatorController
         port map (
             clk => CLOCK_50,
             HardReset => HardResetWire,
@@ -45,27 +45,25 @@ BEGIN
             DoorOpen => DoorWire,
             MovingUp => UpWire,
             MovingDown => DownWire,
-            debug => Debug
+            debugger => Debug
         );
 
     -- Instantiate Display
-    U3_DISP: entity work.seven_segment
-        port map (
-            floor_in => current_floor_wire,
-            hex_out => HEX0
+    U3_DISP: entity work.SegDecoder
+        port map(
+            Floor => CurrFloorWire,
+            HexOut => HEX0
         );
     
     -- System Status
-    LEDR(0) <= door_wire; -- ON when Door is OPEN
-    LEDR(1) <= up_wire;   -- ON when Moving UP
-    LEDR(2) <= down_wire; -- ON when Moving DOWN
+    LEDR(0) <= DoorWire; -- ON when Door is OPEN
+    LEDR(1) <= UpWire;   -- ON when Moving UP
+    LEDR(2) <= DownWire; -- ON when Moving DOWN
     
-    -- Switch Input Debug (LEDR 3-6)
-    -- This connects the switch directly to the LED so you can see it "register"
-    LEDR(3) <= SW(0);     -- Floor 0 Request
-    LEDR(4) <= SW(1);     -- Floor 1 Request
-    LEDR(5) <= SW(2);     -- Floor 2 Request
-    LEDR(6) <= SW(3);     -- Floor 3 Request
+    LEDR(3) <= SW(0); 
+    LEDR(4) <= SW(1); 
+    LEDR(5) <= SW(2); 
+    LEDR(6) <= SW(3); 
     
     -- Unused LEDs (Optional: Map debug state or force to 0)
     LEDR(7) <= '0';
