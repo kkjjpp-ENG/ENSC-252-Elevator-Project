@@ -2,28 +2,25 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-entity elevator_top is
-    Port (
+ENTITY elevator_top IS
+    PORT(
         CLOCK_50 : in  STD_LOGIC;
         KEY      : in  STD_LOGIC_VECTOR(3 downto 0); -- KEY0=Rst, KEY1=SoftRst
         SW       : in  STD_LOGIC_VECTOR(9 downto 0); -- SW0-3=Reqs, SW9=ESTOP
         HEX0     : out STD_LOGIC_VECTOR(6 downto 0);
         LEDR     : out STD_LOGIC_VECTOR(9 downto 0)
     );
-end elevator_top;
+END elevator_top;
 
-architecture Struct of elevator_top is
+ARCHITECTURE Behavioral of elevator_top IS
 
     signal tick_wire : std_logic;
     signal current_floor_wire : integer range 0 to 4;
     signal door_wire, up_wire, down_wire : std_logic;
     signal rst_hard_wire, rst_soft_wire : std_logic;
-    -- Unused signal for debug state (can be mapped to other LEDs if desired)
     signal state_dbg : std_logic_vector(2 downto 0);
 
-begin
-    -- Logic inversion for Keys (Keys are active low on DE10)
-    -- KEY(0) is Reset, KEY(1) is Soft Reset
+BEGIN
     rst_hard_wire <= not KEY(0);
     rst_soft_wire <= not KEY(1);
 
@@ -58,10 +55,6 @@ begin
             floor_in => current_floor_wire,
             hex_out => HEX0
         );
-
-    -- ============================================================
-    -- LED ASSIGNMENTS (FIXED)
-    -- ============================================================
     
     -- System Status
     LEDR(0) <= door_wire; -- ON when Door is OPEN
@@ -80,6 +73,6 @@ begin
     LEDR(8) <= '0';
     
     -- ESTOP Status
-    LEDR(9) <= SW(9);     -- ON when ESTOP switch is UP
+    LEDR(9) <= SW(9); 
 
-end Struct;
+end Behavioral;
