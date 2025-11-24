@@ -1,26 +1,28 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+-- This Specific Decoder is meant solely for the elevator
 
-entity seven_segment is
-    Port (
-        floor_in : in  integer range 0 to 15;
-        hex_out  : out STD_LOGIC_VECTOR(6 downto 0) -- Active Low
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+
+ENTITY SegDecoder is
+    PORT(
+        Floor : in  integer range 0 to 15;
+        HexOut  : out STD_LOGIC_VECTOR(6 downto 0)
     );
-end seven_segment;
+END SegDecoder;
 
-architecture Behavioral of seven_segment is
-begin
-    process(floor_in)
-    begin
-        case floor_in is
-            -- GFE DCBA (Standard mapping, 0 is ON)
-            when 0 => hex_out <= "1000000"; -- 0
-            when 1 => hex_out <= "1111001"; -- 1
-            when 2 => hex_out <= "0100100"; -- 2
-            when 3 => hex_out <= "0110000"; -- 3
-            when 4 => hex_out <= "0011001"; -- 4
-            when 5 => hex_out <= "0010010"; -- 5 (S/5)
-            when others => hex_out <= "0111111"; -- Dash
-        end case;
-    end process;
-end Behavioral;
+ARCHITECTURE Behavioral of SegDecoder IS
+BEGIN
+    process(Floor)
+    BEGIN
+        case Floor IS
+            when 0 => HexOut <= "1000000"; -- 0
+            when 1 => HexOut <= "1111001"; -- 1
+            when 2 => HexOut <= "0100100"; -- 2
+            when 3 => HexOut <= "0110000"; -- 3
+            when 4 => HexOut <= "0011001"; -- 4
+            when 5 => HexOut <= "0010010"; -- 5 
+            when others => HexOut <= "0111111";
+        END case;
+    END process;
+END Behavioral;
