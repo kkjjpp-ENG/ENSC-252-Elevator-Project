@@ -2,7 +2,7 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY elevator_top IS
+ENTITY ElevatorTop IS
     PORT(
         CLOCK_50 : in  STD_LOGIC;
         KEY : in  STD_LOGIC_VECTOR(3 downto 0);
@@ -10,43 +10,42 @@ ENTITY elevator_top IS
         HEX0 : out STD_LOGIC_VECTOR(6 downto 0);
         LEDR : out STD_LOGIC_VECTOR(9 downto 0)
     );
-END elevator_top;
+END ElevatorTop;
 
-ARCHITECTURE Behavioral of elevator_top IS
+ARCHITECTURE Behavioral of ElevatorTop IS
 
-    signal tick_wire : std_logic;
-    signal current_floor_wire : integer range 0 to 4;
-    signal door_wire, up_wire, down_wire : std_logic;
-    signal rst_hard_wire, rst_soft_wire : std_logic;
-    signal state_dbg : std_logic_vector(2 downto 0);
+    signal TickWire : std_logic;
+    signal CurrFloorWire : integer range 0 to 4;
+    signal DoorWire, UpWire, DownWire : std_logic;
+    signal HardResetWire, SoftResetWire : std_logic;
+    signal Debug : std_logic_vector(2 downto 0);
 
 BEGIN
-    rst_hard_wire <= not KEY(0);
-    rst_soft_wire <= not KEY(1);
+    HardResetWire <= not KEY(0);
+    SoftResetWire <= not KEY(1);
 
-    -- Instantiate Clock Divider
-    U1_CLK: entity work.clock_divider
+    U1_CLK: entity work.ClockDivider
         generic map (MAX_COUNT => 50000000)
         port map (
             clk => CLOCK_50,
-            reset => rst_hard_wire,
-            tick_1hz => tick_wire
+            reset => HardResetWire,
+            tick => TickWire
         );
 
     -- Instantiate Controller
     U2_CTRL: entity work.elevator_controller
         port map (
             clk => CLOCK_50,
-            rst_hard => rst_hard_wire,
-            rst_soft => rst_soft_wire,
+            HardReset => HardResetWire,
+            SoftReset => SoftResetWire,
             estop => SW(9),
-            tick_1hz => tick_wire,
-            req_buttons => SW(3 downto 0), -- Switches 0-3 act as floor requests
-            current_floor => current_floor_wire,
-            door_open => door_wire,
-            moving_up => up_wire,
-            moving_down => down_wire,
-            state_debug => state_dbg
+            tick => TickWire,
+            ReqButtons => SW(3 downto 0), 
+            CurrentFloor => CurrFloorWire,
+            DoorOpen => DoorWire,
+            MovingUp => UpWire,
+            MovingDown => DownWire,
+            debug => Debug
         );
 
     -- Instantiate Display
